@@ -1,10 +1,12 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import avatarImg from "../../assets/avatar.png";
 
 export const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useAuth();
 
   const getBreadcrumbTitle = () => {
     switch (location.pathname) {
@@ -13,12 +15,18 @@ export const Header = () => {
       case "/system-logs":
         return "SYSTEM_AUDIT";
       case "/security":
+        return "USER_PROFILE";
       case "/dashboard":
       case "/":
         return "AUTH_PROD";
       default:
         return "AUTH_PROD";
     }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
   };
 
   return (
@@ -35,8 +43,12 @@ export const Header = () => {
       </div>
 
       <div className="flex items-center gap-lg">
-        <span className="bg-[#6f00be]/30 text-[#ddb7ff] px-3 py-1 rounded-full text-xs font-mono border border-[#6f00be]/40 uppercase tracking-wider font-semibold">
-          ADMIN
+        <span className={`px-3 py-1 rounded-full text-xs font-mono border uppercase tracking-wider font-semibold ${
+          user?.role === "admin" 
+            ? "bg-[#6f00be]/30 text-[#ddb7ff] border-[#6f00be]/40" 
+            : "bg-[#1e2942] text-[#3b82f6] border-[#3b82f6]/30"
+        }`}>
+          {user?.role ? user.role.toUpperCase() : "USER"}
         </span>
         
         <button 
@@ -48,13 +60,25 @@ export const Header = () => {
         </button>
 
         <div className="flex items-center gap-md pl-md border-l border-white/10">
-          <img
-            alt="Profile Avatar"
-            title="View Profile & Security"
-            onClick={() => navigate("/security")}
-            className="w-8 h-8 rounded-full object-cover ring-2 ring-[#c0c1ff]/30 hover:ring-[#c0c1ff]/60 transition-all cursor-pointer"
-            src={avatarImg}
-          />
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/security")}>
+            <img
+              alt="Profile Avatar"
+              title="View Profile & Security"
+              className="w-8 h-8 rounded-full object-cover ring-2 ring-[#c0c1ff]/30 hover:ring-[#c0c1ff]/60 transition-all"
+              src={avatarImg}
+            />
+            <span className="text-xs font-mono text-white font-semibold hidden md:inline">
+              {user?.name || "User"}
+            </span>
+          </div>
+
+          <button
+            onClick={handleLogout}
+            title="Đăng xuất"
+            className="text-[#908fa0] hover:text-[#ff6b6b] transition-colors p-1 flex items-center"
+          >
+            <span className="material-symbols-outlined text-[20px]">logout</span>
+          </button>
         </div>
       </div>
     </header>

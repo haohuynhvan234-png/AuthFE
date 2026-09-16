@@ -1,22 +1,41 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 export const SignInForm = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage("");
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+
+    const result = await login(email, password);
+    setLoading(false);
+
+    if (result.success) {
       navigate("/dashboard");
-    }, 600);
+    } else {
+      setErrorMessage(result.error);
+    }
   };
 
   return (
     <form className="flex flex-col gap-4 w-full" onSubmit={handleSubmit}>
+      {errorMessage && (
+        <div className="bg-[#ff6b6b]/10 border border-[#ff6b6b]/30 rounded-xl p-3 text-xs text-[#ff6b6b] flex items-center gap-2 font-sans">
+          <span className="material-symbols-outlined text-[18px]">error</span>
+          <span>{errorMessage}</span>
+        </div>
+      )}
+
       {/* Email Address */}
       <div className="flex flex-col gap-1.5 w-full">
         <label className="font-mono text-[11px] text-[#908fa0] uppercase tracking-wider font-semibold">
@@ -31,6 +50,8 @@ export const SignInForm = () => {
             placeholder="name@company.com"
             required
             type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
         </div>
       </div>
@@ -58,6 +79,8 @@ export const SignInForm = () => {
             placeholder="••••••••"
             required
             type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           />
           <button
             type="button"

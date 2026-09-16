@@ -1,32 +1,71 @@
 import React, { useState } from "react";
+import { useAuth } from "../../context/AuthContext";
 
 export const SignUpForm = ({ onSubmitSuccess }) => {
-  const [showPassword, setShowPassword] = useState(false);
+  const { register, login } = useAuth();
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
-  const getStrength = (val) => {
-    let strength = 0;
-    if (val.length > 5) strength++;
-    if (val.length > 8) strength++;
-    if (/[A-Z]/.test(val) && /[a-z]/.test(val)) strength++;
-    if (/[0-9!@#$%^&*]/.test(val)) strength++;
-    return strength;
-  };
+  // Simple strength check: green as long as password is >= 6 chars
+  const isPasswordValid = password.length >= 6;
 
-  const strength = getStrength(password);
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    if (!isPasswordValid) {
+      setErrorMessage("Mật khẩu phải có từ 6 ký tự trở lên.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMessage("Mật khẩu xác nhận không trùng khớp.");
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
+
+    const result = await register(name, email, password);
+
+    if (result.success) {
+      setSuccessMessage("Đăng ký tài khoản thành công! Đang tự động đăng nhập...");
+      // Try auto-login
+      const loginResult = await login(email, password);
       setLoading(false);
-      if (onSubmitSuccess) onSubmitSuccess();
-    }, 600);
+
+      if (!loginResult.success && onSubmitSuccess) {
+        onSubmitSuccess();
+      }
+    } else {
+      setLoading(false);
+      setErrorMessage(result.error);
+    }
   };
 
   return (
     <form className="flex flex-col gap-4 w-full" onSubmit={handleSubmit}>
+      {errorMessage && (
+        <div className="bg-[#ff6b6b]/10 border border-[#ff6b6b]/30 rounded-xl p-3 text-xs text-[#ff6b6b] flex items-center gap-2 font-sans">
+          <span className="material-symbols-outlined text-[18px]">error</span>
+          <span>{errorMessage}</span>
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="bg-[#10b981]/10 border border-[#10b981]/30 rounded-xl p-3 text-xs text-[#10b981] flex items-center gap-2 font-sans">
+          <span className="material-symbols-outlined text-[18px]">check_circle</span>
+          <span>{successMessage}</span>
+        </div>
+      )}
+
       {/* Full Name */}
       <div className="flex flex-col gap-1.5 w-full">
         <label className="font-mono text-[11px] text-[#908fa0] uppercase tracking-wider font-semibold">
@@ -38,9 +77,11 @@ export const SignUpForm = ({ onSubmitSuccess }) => {
           </span>
           <input
             className="w-full bg-[#0c1426]/90 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 font-sans text-sm text-white placeholder-[#464554] focus:outline-none focus:border-[#8083ff]/60 transition-all duration-200 shadow-inner"
-            placeholder="John Doe"
+            placeholder="Nguyen Van A"
             required
             type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
           />
         </div>
       </div>
@@ -59,6 +100,8 @@ export const SignUpForm = ({ onSubmitSuccess }) => {
             placeholder="name@company.com"
             required
             type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
         </div>
       </div>
@@ -66,7 +109,7 @@ export const SignUpForm = ({ onSubmitSuccess }) => {
       {/* Password */}
       <div className="flex flex-col gap-1.5 w-full">
         <label className="font-mono text-[11px] text-[#908fa0] uppercase tracking-wider font-semibold">
-          PASSWORD
+          PASSWORD (TỐI THIỂU 6 KÝ TỰ)
         </label>
         <div className="relative group w-full">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#908fa0]/60 group-focus-within:text-[#c0c1ff] transition-colors text-[18px]">
@@ -74,7 +117,7 @@ export const SignUpForm = ({ onSubmitSuccess }) => {
           </span>
           <input
             className="w-full bg-[#0c1426]/90 border border-white/10 rounded-xl py-2.5 pl-10 pr-10 font-sans text-sm text-white placeholder-[#464554] focus:outline-none focus:border-[#8083ff]/60 transition-all duration-200 shadow-inner"
-            placeholder="Create a password"
+            placeholder="Tối thiểu 6 ký tự"
             required
             type={showPassword ? "text" : "password"}
             value={password}
@@ -91,13 +134,15 @@ export const SignUpForm = ({ onSubmitSuccess }) => {
           </button>
         </div>
 
-        {/* Strength indicators */}
-        <div className="flex gap-1 h-1 w-full mt-1 rounded-full overflow-hidden bg-[#0c1426]">
-          <div className={`h-full flex-1 transition-colors duration-300 ${strength >= 1 ? (strength === 1 ? "bg-[#ff6b6b]" : strength === 2 ? "bg-[#f7be1d]" : "bg-[#10b981]") : ""}`}></div>
-          <div className={`h-full flex-1 transition-colors duration-300 ${strength >= 2 ? (strength === 2 ? "bg-[#f7be1d]" : "bg-[#10b981]") : ""}`}></div>
-          <div className={`h-full flex-1 transition-colors duration-300 ${strength >= 3 ? "bg-[#10b981]" : ""}`}></div>
-          <div className={`h-full flex-1 transition-colors duration-300 ${strength >= 4 ? "bg-[#10b981]" : ""}`}></div>
-        </div>
+        {/* Visual feedback for password >= 6 chars */}
+        {password.length > 0 && (
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <div className={`h-1 flex-1 rounded-full transition-colors duration-300 ${isPasswordValid ? "bg-[#10b981]" : "bg-[#ff6b6b]"}`}></div>
+            <span className={`text-[11px] font-mono ${isPasswordValid ? "text-[#10b981]" : "text-[#ff6b6b]"}`}>
+              {isPasswordValid ? "Mật khẩu hợp lệ (≥ 6 ký tự)" : `${password.length}/6 ký tự`}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Confirm Password */}
@@ -111,16 +156,18 @@ export const SignUpForm = ({ onSubmitSuccess }) => {
           </span>
           <input
             className="w-full bg-[#0c1426]/90 border border-white/10 rounded-xl py-2.5 pl-10 pr-10 font-sans text-sm text-white placeholder-[#464554] focus:outline-none focus:border-[#8083ff]/60 transition-all duration-200 shadow-inner"
-            placeholder="Confirm your password"
+            placeholder="Nhập lại mật khẩu"
             required
             type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
           />
         </div>
       </div>
 
       {/* Submit Button */}
       <button
-        className="relative w-full py-2.5 mt-1 bg-[#5659f4] hover:bg-[#4548e2] text-white font-mono text-sm font-semibold rounded-xl overflow-hidden group transition-all duration-300 shadow-lg shadow-[#5659f4]/25 flex items-center justify-center active:scale-98"
+        className="relative w-full py-2.5 mt-1 bg-[#5659f4] hover:bg-[#4548e2] text-white font-mono text-sm font-semibold rounded-xl overflow-hidden group transition-all duration-300 shadow-lg shadow-[#5659f4]/25 flex items-center justify-center active:scale-98 cursor-pointer"
         type="submit"
         disabled={loading}
       >

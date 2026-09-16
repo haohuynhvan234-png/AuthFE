@@ -1,65 +1,109 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { PublicOnlyRoute } from "./components/auth/PublicOnlyRoute";
 import { MainLayout } from "./components/layout/MainLayout";
 import { DashboardPage } from "./pages/Dashboard";
 import { UserManagementPage } from "./pages/UserManagement";
 import { SystemLogsPage } from "./pages/SystemLogs";
+import { UserProfilePage } from "./pages/UserProfile";
 import { AuthPage } from "./pages/Auth";
 
 function App() {
   return (
-    <Routes>
-      {/* Auth routes (Standalone, without MainLayout) */}
-      <Route path="/login" element={<AuthPage mode="signin" />} />
-      <Route path="/signin" element={<AuthPage mode="signin" />} />
-      <Route path="/register" element={<AuthPage mode="signup" />} />
-      <Route path="/signup" element={<AuthPage mode="signup" />} />
+    <AuthProvider>
+      <Routes>
+        {/* Auth routes (Public only - redirect to dashboard if already logged in) */}
+        <Route
+          path="/login"
+          element={
+            <PublicOnlyRoute>
+              <AuthPage mode="signin" />
+            </PublicOnlyRoute>
+          }
+        />
+        <Route
+          path="/signin"
+          element={
+            <PublicOnlyRoute>
+              <AuthPage mode="signin" />
+            </PublicOnlyRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <PublicOnlyRoute>
+              <AuthPage mode="signup" />
+            </PublicOnlyRoute>
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            <PublicOnlyRoute>
+              <AuthPage mode="signup" />
+            </PublicOnlyRoute>
+          }
+        />
 
-      {/* Main Layout routes */}
-      <Route
-        path="/"
-        element={
-          <MainLayout>
-            <DashboardPage />
-          </MainLayout>
-        }
-      />
-      <Route
-        path="/dashboard"
-        element={
-          <MainLayout>
-            <DashboardPage />
-          </MainLayout>
-        }
-      />
-      <Route
-        path="/security"
-        element={
-          <MainLayout>
-            <DashboardPage />
-          </MainLayout>
-        }
-      />
-      <Route
-        path="/user-management"
-        element={
-          <MainLayout>
-            <UserManagementPage />
-          </MainLayout>
-        }
-      />
-      <Route
-        path="/system-logs"
-        element={
-          <MainLayout>
-            <SystemLogsPage />
-          </MainLayout>
-        }
-      />
+        {/* Main Protected Layout routes */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <DashboardPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <DashboardPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/security"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <UserProfilePage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/user-management"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <UserManagementPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/system-logs"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <SystemLogsPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Fallback route */}
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
-    </Routes>
+        {/* Fallback route */}
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </AuthProvider>
   );
 }
 

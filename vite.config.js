@@ -12,5 +12,12 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    proxy: {
+      "/api": {
+        target: "https://authapi-795m.onrender.com",
+        changeOrigin: true,
+        secure: true,
+      },
+    },
   },
 });

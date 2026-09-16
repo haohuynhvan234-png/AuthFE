@@ -1,8 +1,15 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 export const DangerZone = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleSignOut = async () => {
+    await logout();
+    navigate("/login");
+  };
 
   return (
     <div className="bg-[#172036]/70 backdrop-blur-xl rounded-2xl p-xl shadow-xl relative overflow-hidden border border-[#ff6b6b]/10">
@@ -16,8 +23,8 @@ export const DangerZone = () => {
           </p>
         </div>
         <button
-          onClick={() => navigate("/login")}
-          className="bg-[#c92a2a] hover:bg-[#b02525] text-white font-label-md text-xs font-semibold px-5 py-2.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 active:scale-98"
+          onClick={handleSignOut}
+          className="bg-[#c92a2a] hover:bg-[#b02525] text-white font-label-md text-xs font-semibold px-5 py-2.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 active:scale-98 cursor-pointer"
         >
           <span className="material-symbols-outlined text-[16px]">logout</span>
           Sign Out

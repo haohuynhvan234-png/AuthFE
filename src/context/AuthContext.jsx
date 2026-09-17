@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+﻿import React, { createContext, useContext, useState, useEffect } from "react";
 import apiClient from "../api/apiClient";
+import { extractErrorMessage } from "../lib/toast";
 
 const AuthContext = createContext(null);
 
@@ -10,19 +11,6 @@ export const AuthProvider = ({ children }) => {
   });
   const [token, setToken] = useState(() => localStorage.getItem("token") || null);
   const [loading, setLoading] = useState(true);
-
-  const getErrorMessage = (err, defaultMsg) => {
-    if (err.response?.data?.message) {
-      return err.response.data.message;
-    }
-    if (err.response?.status === 500) {
-      return "Lỗi máy chủ (500). Vui lòng thử lại sau hoặc kiểm tra log backend.";
-    }
-    if (!err.response) {
-      return "Không thể kết nối tới server Backend (http://localhost:3000). Hãy chắc chắn Backend đang chạy.";
-    }
-    return defaultMsg;
-  };
 
   // Validate session on app start
   useEffect(() => {
@@ -55,7 +43,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const res = await apiClient.post("/api/auth/login", { email, password });
-      const { token: newToken, user: userData } = res.data;
+      const { token: newToken, user: userData, message } = res.data;
 
       localStorage.setItem("token", newToken);
       localStorage.setItem("user", JSON.stringify(userData));
@@ -63,9 +51,9 @@ export const AuthProvider = ({ children }) => {
       setToken(newToken);
       setUser(userData);
 
-      return { success: true, data: res.data };
+      return { success: true, message: message || "Đăng nhập thành công!", data: res.data };
     } catch (err) {
-      const message = getErrorMessage(err, "Đăng nhập thất bại. Vui lòng thử lại.");
+      const message = extractErrorMessage(err, "Đăng nhập thất bại. Vui lòng thử lại.");
       return { success: false, error: message };
     }
   };
@@ -73,9 +61,13 @@ export const AuthProvider = ({ children }) => {
   const register = async (name, email, password) => {
     try {
       const res = await apiClient.post("/api/auth/register", { name, email, password });
-      return { success: true, data: res.data };
+      return { 
+        success: true, 
+        message: res.data?.message || "Đăng ký tài khoản thành công!", 
+        data: res.data 
+      };
     } catch (err) {
-      const message = getErrorMessage(err, "Đăng ký thất bại. Vui lòng thử lại.");
+      const message = extractErrorMessage(err, "Đăng ký thất bại. Vui lòng thử lại.");
       return { success: false, error: message };
     }
   };
@@ -99,9 +91,12 @@ export const AuthProvider = ({ children }) => {
         oldPassword,
         newPassword,
       });
-      return { success: true, message: res.data.message };
+      return { 
+        success: true, 
+        message: res.data?.message || "Đổi mật khẩu thành công!" 
+      };
     } catch (err) {
-      const message = getErrorMessage(err, "Đổi mật khẩu thất bại. Vui lòng kiểm tra lại.");
+      const message = extractErrorMessage(err, "Đổi mật khẩu thất bại. Vui lòng kiểm tra lại.");
       return { success: false, error: message };
     }
   };

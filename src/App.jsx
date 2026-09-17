@@ -1,5 +1,6 @@
-import React from "react";
+﻿import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { PublicOnlyRoute } from "./components/auth/PublicOnlyRoute";
@@ -13,6 +14,34 @@ import { AuthPage } from "./pages/Auth";
 function App() {
   return (
     <AuthProvider>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: "#141d33",
+            color: "#dae2fd",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5)",
+            backdropFilter: "blur(12px)",
+            borderRadius: "0.75rem",
+            fontSize: "0.875rem",
+            padding: "12px 16px",
+          },
+          success: {
+            iconTheme: {
+              primary: "#10b981",
+              secondary: "#141d33",
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: "#ff6b6b",
+              secondary: "#141d33",
+            },
+          },
+        }}
+      />
       <Routes>
         {/* Auth routes (Public only - redirect to dashboard if already logged in) */}
         <Route

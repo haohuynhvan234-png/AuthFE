@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
+import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 
 export const SecuritySettings = () => {
@@ -8,8 +9,6 @@ export const SecuritySettings = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
   const getStrength = (val) => {
     let strength = 0;
@@ -24,21 +23,19 @@ export const SecuritySettings = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage("");
-    setSuccessMessage("");
 
     if (!currentPassword) {
-      setErrorMessage("Vui lòng nhập mật khẩu hiện tại.");
+      toast.error("Vui lòng nhập mật khẩu hiện tại.");
       return;
     }
 
     if (newPassword.length < 6) {
-      setErrorMessage("Mật khẩu mới phải có ít nhất 6 ký tự.");
+      toast.error("Mật khẩu mới phải có ít nhất 6 ký tự.");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setErrorMessage("Mật khẩu mới và mật khẩu xác nhận không trùng khớp.");
+      toast.error("Mật khẩu mới và mật khẩu xác nhận không trùng khớp.");
       return;
     }
 
@@ -47,12 +44,12 @@ export const SecuritySettings = () => {
     setLoading(false);
 
     if (result.success) {
-      setSuccessMessage(result.message || "Đổi mật khẩu thành công!");
+      toast.success(result.message || "Đổi mật khẩu thành công!");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } else {
-      setErrorMessage(result.error);
+      toast.error(result.error);
     }
   };
 
@@ -74,20 +71,6 @@ export const SecuritySettings = () => {
           </p>
         </div>
       </div>
-
-      {errorMessage && (
-        <div className="bg-[#ff6b6b]/10 border border-[#ff6b6b]/30 rounded-xl p-3 mb-4 text-xs text-[#ff6b6b] flex items-center gap-2 font-sans">
-          <span className="material-symbols-outlined text-[18px]">error</span>
-          <span>{errorMessage}</span>
-        </div>
-      )}
-
-      {successMessage && (
-        <div className="bg-[#10b981]/10 border border-[#10b981]/30 rounded-xl p-3 mb-4 text-xs text-[#10b981] flex items-center gap-2 font-sans">
-          <span className="material-symbols-outlined text-[18px]">check_circle</span>
-          <span>{successMessage}</span>
-        </div>
-      )}
 
       {/* Form Fields */}
       <form className="flex flex-col gap-lg" onSubmit={handleSubmit}>

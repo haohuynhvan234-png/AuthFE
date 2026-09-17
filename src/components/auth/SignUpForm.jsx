@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
+import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 
 export const SignUpForm = ({ onSubmitSuccess }) => {
@@ -10,24 +11,20 @@ export const SignUpForm = ({ onSubmitSuccess }) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
   // Simple strength check: green as long as password is >= 6 chars
   const isPasswordValid = password.length >= 6;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage("");
-    setSuccessMessage("");
 
     if (!isPasswordValid) {
-      setErrorMessage("Mật khẩu phải có từ 6 ký tự trở lên.");
+      toast.error("Mật khẩu phải có từ 6 ký tự trở lên.");
       return;
     }
 
     if (password !== confirmPassword) {
-      setErrorMessage("Mật khẩu xác nhận không trùng khớp.");
+      toast.error("Mật khẩu xác nhận không trùng khớp.");
       return;
     }
 
@@ -36,7 +33,7 @@ export const SignUpForm = ({ onSubmitSuccess }) => {
     const result = await register(name, email, password);
 
     if (result.success) {
-      setSuccessMessage("Đăng ký tài khoản thành công! Đang tự động đăng nhập...");
+      toast.success(result.message || "Đăng ký tài khoản thành công!");
       // Try auto-login
       const loginResult = await login(email, password);
       setLoading(false);
@@ -46,26 +43,12 @@ export const SignUpForm = ({ onSubmitSuccess }) => {
       }
     } else {
       setLoading(false);
-      setErrorMessage(result.error);
+      toast.error(result.error);
     }
   };
 
   return (
     <form className="flex flex-col gap-4 w-full" onSubmit={handleSubmit}>
-      {errorMessage && (
-        <div className="bg-[#ff6b6b]/10 border border-[#ff6b6b]/30 rounded-xl p-3 text-xs text-[#ff6b6b] flex items-center gap-2 font-sans">
-          <span className="material-symbols-outlined text-[18px]">error</span>
-          <span>{errorMessage}</span>
-        </div>
-      )}
-
-      {successMessage && (
-        <div className="bg-[#10b981]/10 border border-[#10b981]/30 rounded-xl p-3 text-xs text-[#10b981] flex items-center gap-2 font-sans">
-          <span className="material-symbols-outlined text-[18px]">check_circle</span>
-          <span>{successMessage}</span>
-        </div>
-      )}
-
       {/* Full Name */}
       <div className="flex flex-col gap-1.5 w-full">
         <label className="font-mono text-[11px] text-[#908fa0] uppercase tracking-wider font-semibold">

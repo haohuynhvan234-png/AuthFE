@@ -1,5 +1,6 @@
-import React from "react";
+﻿import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 import avatarImg from "../../assets/avatar.png";
 
@@ -26,6 +27,7 @@ export const Header = () => {
 
   const handleLogout = async () => {
     await logout();
+    toast.success("Đã đăng xuất thành công.");
     navigate("/login");
   };
 

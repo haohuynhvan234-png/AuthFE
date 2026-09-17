@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 
 export const SignInForm = () => {
@@ -10,32 +11,24 @@ export const SignInForm = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage("");
     setLoading(true);
 
     const result = await login(email, password);
     setLoading(false);
 
     if (result.success) {
+      toast.success(result.message || "Đăng nhập thành công!");
       navigate("/dashboard");
     } else {
-      setErrorMessage(result.error);
+      toast.error(result.error);
     }
   };
 
   return (
     <form className="flex flex-col gap-4 w-full" onSubmit={handleSubmit}>
-      {errorMessage && (
-        <div className="bg-[#ff6b6b]/10 border border-[#ff6b6b]/30 rounded-xl p-3 text-xs text-[#ff6b6b] flex items-center gap-2 font-sans">
-          <span className="material-symbols-outlined text-[18px]">error</span>
-          <span>{errorMessage}</span>
-        </div>
-      )}
-
       {/* Email Address */}
       <div className="flex flex-col gap-1.5 w-full">
         <label className="font-mono text-[11px] text-[#908fa0] uppercase tracking-wider font-semibold">

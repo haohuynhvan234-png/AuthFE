@@ -1,5 +1,6 @@
-import React from "react";
+﻿import React from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 
 export const DangerZone = () => {
@@ -8,6 +9,7 @@ export const DangerZone = () => {
 
   const handleSignOut = async () => {
     await logout();
+    toast.success("Đã đăng xuất khỏi tài khoản.");
     navigate("/login");
   };
 

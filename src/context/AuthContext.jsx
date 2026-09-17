@@ -9,7 +9,9 @@ export const AuthProvider = ({ children }) => {
     const savedUser = localStorage.getItem("user");
     return savedUser ? JSON.parse(savedUser) : null;
   });
-  const [token, setToken] = useState(() => localStorage.getItem("token") || null);
+  const [token, setToken] = useState(
+    () => localStorage.getItem("token") || null,
+  );
   const [loading, setLoading] = useState(true);
 
   // Validate session on app start
@@ -24,7 +26,10 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem("user", JSON.stringify(res.data.user));
           }
         } catch (err) {
-          console.warn("Session validation failed:", err?.response?.data?.message || err.message);
+          console.warn(
+            "Session validation failed:",
+            err?.response?.data?.message || err.message,
+          );
           localStorage.removeItem("token");
           localStorage.removeItem("user");
           setToken(null);
@@ -51,23 +56,37 @@ export const AuthProvider = ({ children }) => {
       setToken(newToken);
       setUser(userData);
 
-      return { success: true, message: message || "Đăng nhập thành công!", data: res.data };
+      return {
+        success: true,
+        message: message || "Đăng nhập thành công!",
+        data: res.data,
+      };
     } catch (err) {
-      const message = extractErrorMessage(err, "Đăng nhập thất bại. Vui lòng thử lại.");
+      const message = extractErrorMessage(
+        err,
+        "Đăng nhập thất bại. Vui lòng thử lại.",
+      );
       return { success: false, error: message };
     }
   };
 
   const register = async (name, email, password) => {
     try {
-      const res = await apiClient.post("/api/auth/register", { name, email, password });
-      return { 
-        success: true, 
-        message: res.data?.message || "Đăng ký tài khoản thành công!", 
-        data: res.data 
+      const res = await apiClient.post("/api/auth/register", {
+        name,
+        email,
+        password,
+      });
+      return {
+        success: true,
+        message: res.data?.message || "Đăng ký tài khoản thành công!",
+        data: res.data,
       };
     } catch (err) {
-      const message = extractErrorMessage(err, "Đăng ký thất bại. Vui lòng thử lại.");
+      const message = extractErrorMessage(
+        err,
+        "Đăng ký thất bại. Vui lòng thử lại.",
+      );
       return { success: false, error: message };
     }
   };
@@ -91,12 +110,15 @@ export const AuthProvider = ({ children }) => {
         oldPassword,
         newPassword,
       });
-      return { 
-        success: true, 
-        message: res.data?.message || "Đổi mật khẩu thành công!" 
+      return {
+        success: true,
+        message: res.data?.message || "Đổi mật khẩu thành công!",
       };
     } catch (err) {
-      const message = extractErrorMessage(err, "Đổi mật khẩu thất bại. Vui lòng kiểm tra lại.");
+      const message = extractErrorMessage(
+        err,
+        "Đổi mật khẩu thất bại. Vui lòng kiểm tra lại.",
+      );
       return { success: false, error: message };
     }
   };

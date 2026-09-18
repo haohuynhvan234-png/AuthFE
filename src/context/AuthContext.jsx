@@ -70,6 +70,31 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithGoogle = async (idToken) => {
+    try {
+      const res = await apiClient.post("/api/auth/google-login", { idToken });
+      const { token: newToken, user: userData, message } = res.data;
+
+      localStorage.setItem("token", newToken);
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      setToken(newToken);
+      setUser(userData);
+
+      return {
+        success: true,
+        message: message || "Đăng nhập Google thành công!",
+        data: res.data,
+      };
+    } catch (err) {
+      const message = extractErrorMessage(
+        err,
+        "Đăng nhập Google thất bại. Vui lòng thử lại.",
+      );
+      return { success: false, error: message };
+    }
+  };
+
   const register = async (name, email, password) => {
     try {
       const res = await apiClient.post("/api/auth/register", {
@@ -133,6 +158,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         isAuthenticated,
         login,
+        loginWithGoogle,
         register,
         logout,
         changePassword,

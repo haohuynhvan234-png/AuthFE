@@ -22,7 +22,8 @@ function App() {
             background: "#141d33",
             color: "#dae2fd",
             border: "1px solid rgba(255, 255, 255, 0.1)",
-            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5)",
+            boxShadow:
+              "0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5)",
             backdropFilter: "blur(12px)",
             borderRadius: "0.75rem",
             fontSize: "0.875rem",

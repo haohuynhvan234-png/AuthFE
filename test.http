@@ -1,0 +1,41 @@
+### -------------------------------------------------------------------------
+### GOOGLE LOGIN (Firebase Auth)
+### -------------------------------------------------------------------------
+
+# 1. Login thành công bằng Firebase ID Token thực tế
+# (Lấy ID Token sau khi đăng nhập từ Firebase Client SDK hoặc Google popup)
+POST {{authUrl}}/google-login
+Content-Type: {{contentType}}
+
+{
+  "idToken": "PASTE_YOUR_REAL_FIREBASE_ID_TOKEN_HERE"
+}
+
+###
+
+# 2. Test Case: Thiếu trường idToken trong body -> Mong đợi HTTP 400 Bad Request
+POST {{authUrl}}/google-login
+Content-Type: {{contentType}}
+
+{
+}
+
+###
+
+# 3. Test Case: idToken là token giả / không hợp lệ -> Mong đợi HTTP 401 Unauthorized
+POST {{authUrl}}/google-login
+Content-Type: {{contentType}}
+
+{
+  "idToken": "fake_token_123456"
+}
+
+###
+
+# 4. Test Case: idToken rỗng -> Mong đợi HTTP 400 Bad Request
+POST {{authUrl}}/google-login
+Content-Type: {{contentType}}
+
+{
+  "idToken": ""
+}

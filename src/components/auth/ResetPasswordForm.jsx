@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import apiClient from "../../api/apiClient";
@@ -14,6 +14,16 @@ export const ResetPasswordForm = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Đặt tên window để khi bấm link trong mail sẽ focus/nhảy vào tab này
+  useEffect(() => {
+    window.name = "app_window";
+
+    // Ẩn token trên thanh địa chỉ URL của trình duyệt để bảo mật
+    if (tokenFromUrl) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [tokenFromUrl]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -62,28 +72,6 @@ export const ResetPasswordForm = () => {
           Vui lòng nhập mật khẩu mới cho tài khoản của bạn.
         </p>
       </div>
-
-      {/* Token Field (nếu không có trong query param) */}
-      {!tokenFromUrl && (
-        <div className="flex flex-col gap-1.5 w-full">
-          <label className="font-mono text-[11px] text-[#908fa0] uppercase tracking-wider font-semibold">
-            RESET TOKEN
-          </label>
-          <div className="relative group w-full">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#908fa0]/60 group-focus-within:text-[#c0c1ff] transition-colors text-[18px]">
-              key
-            </span>
-            <input
-              className="w-full bg-[#0c1426]/90 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 font-sans text-sm text-white placeholder-[#464554] focus:outline-none focus:border-[#8083ff]/60 transition-all duration-200 shadow-inner"
-              placeholder="Dán token từ email vào đây"
-              required
-              type="text"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-            />
-          </div>
-        </div>
-      )}
 
       {/* New Password */}
       <div className="flex flex-col gap-1.5 w-full">

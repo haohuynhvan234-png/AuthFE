@@ -77,6 +77,22 @@ function App() {
             </PublicOnlyRoute>
           }
         />
+        <Route
+          path="/forgot-password"
+          element={
+            <PublicOnlyRoute>
+              <AuthPage mode="forgot" />
+            </PublicOnlyRoute>
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            <PublicOnlyRoute>
+              <AuthPage mode="reset" />
+            </PublicOnlyRoute>
+          }
+        />
 
         {/* Main Protected Layout routes */}
         <Route

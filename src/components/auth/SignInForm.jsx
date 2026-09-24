@@ -1,5 +1,5 @@
 ﻿import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 
@@ -55,13 +55,12 @@ export const SignInForm = () => {
           <label className="font-mono text-[11px] text-[#908fa0] uppercase tracking-wider font-semibold">
             PASSWORD
           </label>
-          <a
+          <Link
             className="font-mono text-xs text-[#c0c1ff] hover:text-white transition-colors"
-            href="#"
-            onClick={(e) => e.preventDefault()}
+            to="/forgot-password"
           >
             Forgot?
-          </a>
+          </Link>
         </div>
         <div className="relative group w-full">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#908fa0]/60 group-focus-within:text-[#c0c1ff] transition-colors text-[18px]">
@@ -111,7 +110,7 @@ export const SignInForm = () => {
         <span className={`relative z-10 flex items-center gap-2 transition-opacity duration-200 ${loading ? "opacity-0" : "opacity-100"}`}>
           Sign In <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
         </span>
-        
+
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-[#5659f4]">
             <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">

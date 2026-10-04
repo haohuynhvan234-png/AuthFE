@@ -1,6 +1,5 @@
 import React from "react";
 import { useAuth } from "../../context/AuthContext";
-import avatarImg from "../../assets/avatar.png";
 
 export const ProfileSidebar = () => {
   const { user } = useAuth();
@@ -17,6 +16,12 @@ export const ProfileSidebar = () => {
       return dateString;
     }
   };
+
+  // tạo biến chứa user từ localStorage để hiển thị avatar, nếu không có thì dùng ảnh placeholder
+  const userLocalStorage = JSON.parse(localStorage.getItem("user")) || {};
+
+  const avatarImg =
+    userLocalStorage.avatar || "https://via.placeholder.com/150";
 
   return (
     <div className="bg-[#172036]/70 backdrop-blur-xl rounded-2xl p-lg shadow-xl relative overflow-hidden flex flex-col items-center text-center border border-white/5">
@@ -43,11 +48,13 @@ export const ProfileSidebar = () => {
         {user?.email || "no-email@authapi.dev"}
       </p>
 
-      <span className={`text-[11px] font-mono font-bold px-4 py-1 rounded-full uppercase tracking-wider mb-lg border shadow-xs ${
-        user?.role === "admin"
-          ? "bg-[#6f00be]/30 text-[#ddb7ff] border-[#6f00be]/40"
-          : "bg-[#1e2942] text-[#3b82f6] border-[#3b82f6]/20"
-      }`}>
+      <span
+        className={`text-[11px] font-mono font-bold px-4 py-1 rounded-full uppercase tracking-wider mb-lg border shadow-xs ${
+          user?.role === "admin"
+            ? "bg-[#6f00be]/30 text-[#ddb7ff] border-[#6f00be]/40"
+            : "bg-[#1e2942] text-[#3b82f6] border-[#3b82f6]/20"
+        }`}
+      >
         {user?.role ? user.role.toUpperCase() : "USER"}
       </span>
 

@@ -34,6 +34,11 @@ export const SecuritySettings = () => {
       return;
     }
 
+    if (currentPassword === newPassword) {
+      toast.error("Mật khẩu mới không được trùng với mật khẩu cũ.");
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       toast.error("Mật khẩu mới và mật khẩu xác nhận không trùng khớp.");
       return;

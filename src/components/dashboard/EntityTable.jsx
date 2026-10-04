@@ -1,296 +1,352 @@
-import React, { useState } from "react";
+﻿import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
+import apiClient from "../../api/apiClient";
+import { useAuth } from "../../context/AuthContext";
+import { extractErrorMessage } from "../../lib/toast";
 
 export const EntityTable = () => {
+  const { user: currentUser } = useAuth();
+  const [entities, setEntities] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+  const [updatingRoleId, setUpdatingRoleId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
-  const initialEntities = [
-    {
-      id: "USR-992A",
-      name: "Sarah Jenkins",
-      email: "s.jenkins@nexus.corp",
-      role: "Admin",
-      status: "Active",
-      joinedDate: "2023-10-15",
-      avatar:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuBL4-DqPkLPz6brJZJSOzLeM9qxBTlAwoG0ev06KDXKgnYfEJxJnEAQIMtehBe-8qpVnigi1Krs8T_OLQ_muW-uxIK92xevszo7QKTJTwefHO3QwF1oHLia0E9mcXoqwRXWGfObj8hWJEOi4SU5giX6HSDik0-WXF-XtyCFZfYI8q2EoE-Pk26fZRr0WTpT-1DNreAkFUVPd4cZlDl9mhi0km0p6zvgFXYGrmegC1p3D1rhSgM_ySq9",
-    },
-    {
-      id: "USR-774B",
-      name: "Marcus Chen",
-      email: "m.chen@nexus.corp",
-      role: "User",
-      status: "Offline",
-      joinedDate: "2024-01-22",
-      avatar: null,
-      initials: "MC",
-    },
-    {
-      id: "USR-441C",
-      name: "Alex Rivera",
-      email: "a.rivera@nexus.corp",
-      role: "Super Admin",
-      status: "Active",
-      joinedDate: "2023-08-01",
-      avatar: null,
-      initials: "AR",
-    },
-    {
-      id: "USR-108D",
-      name: "Elena Rostova",
-      email: "e.rostova@nexus.corp",
-      role: "User",
-      status: "Active",
-      joinedDate: "2024-02-14",
-      avatar: null,
-      initials: "ER",
-    },
-  ];
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const res = await apiClient.get("/api/auth/admin/users");
+      if (res.data && res.data.data) {
+        setEntities(res.data.data);
+      }
+    } catch (err) {
+      const msg = extractErrorMessage(err, "Không thể tải danh sách tài khoản.");
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const filteredEntities = initialEntities.filter((entity) => {
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleRoleChange = async (targetUser, newRole) => {
+    if (targetUser.role === newRole) return;
+
+    if (targetUser._id === currentUser?._id && newRole !== "admin") {
+      toast.error("Bạn không thể tự hạ quyền Admin của chính mình.");
+      return;
+    }
+
+    setUpdatingRoleId(targetUser._id);
+    try {
+      const res = await apiClient.patch(`/api/auth/admin/users/${targetUser._id}/role`, {
+        role: newRole,
+      });
+      toast.success(res.data?.message || `Đã chuyển vai trò sang ${newRole.toUpperCase()}`);
+      setEntities((prev) =>
+        prev.map((item) =>
+          item._id === targetUser._id ? { ...item, role: newRole } : item
+        )
+      );
+    } catch (err) {
+      const msg = extractErrorMessage(err, "Cập nhật vai trò thất bại.");
+      toast.error(msg);
+    } finally {
+      setUpdatingRoleId(null);
+    }
+  };
+
+  const handleDeleteUser = async (id, email) => {
+    if (id === currentUser?._id) {
+      toast.error("Bạn không thể tự xóa tài khoản của chính mình.");
+      return;
+    }
+
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa người dùng: ${email}?`)) {
+      return;
+    }
+
+    setDeletingId(id);
+    try {
+      const res = await apiClient.delete(`/api/auth/admin/users/${id}`);
+      toast.success(res.data?.message || "Đã xóa người dùng thành công.");
+      setEntities((prev) => prev.filter((item) => item._id !== id));
+    } catch (err) {
+      const msg = extractErrorMessage(err, "Xóa người dùng thất bại.");
+      toast.error(msg);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const filteredEntities = entities.filter((entity) => {
     const matchesSearch =
-      entity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      entity.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      entity.id.toLowerCase().includes(searchTerm.toLowerCase());
-
+      entity.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entity.email?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole =
       roleFilter === "all" ||
-      (roleFilter === "admin" && entity.role.includes("Admin")) ||
-      (roleFilter === "user" && entity.role === "User");
-
+      (entity.role || "user").toLowerCase() === roleFilter.toLowerCase();
     return matchesSearch && matchesRole;
   });
 
-  return (
-    <div className="bg-surface-container-low/50 backdrop-blur-xl rounded-2xl overflow-hidden shadow-2xl relative border border-outline-variant/10">
-      <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-surface-container-low via-outline-variant/30 to-surface-container-low"></div>
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "N/A";
+    const d = new Date(dateStr);
+    return isNaN(d.getTime())
+      ? "N/A"
+      : d.toLocaleDateString("vi-VN", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+  };
 
-      {/* Search & Actions Bar */}
-      <div className="p-lg flex flex-col md:flex-row justify-between items-center gap-md bg-surface-container/30">
-        <div className="relative w-full md:w-96 group">
-          <span className="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant/50 group-focus-within:text-primary transition-colors">
+  return (
+    <div className="bg-[#141d33]/80 backdrop-blur-xl rounded-2xl border border-white/5 overflow-hidden shadow-2xl">
+      {/* Controls Bar */}
+      <div className="p-lg flex flex-col md:flex-row justify-between items-stretch md:items-center gap-md border-b border-white/5">
+        {/* Search Input */}
+        <div className="relative flex-1 max-w-md">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#908fa0] text-[20px]">
             search
           </span>
           <input
             type="text"
+            placeholder="Tìm theo tên hoặc email tài khoản..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Query entities (Name, Email, ID)..."
-            className="w-full bg-surface-container-highest/20 text-on-surface font-body-sm text-body-sm placeholder:text-on-surface-variant/40 rounded-lg py-3 pl-12 pr-4 outline-none border border-outline-variant/20 focus:border-primary/50 focus:bg-surface-container-highest/40 transition-all shadow-inner"
+            className="w-full bg-[#0c1426]/90 border border-white/10 rounded-xl py-2 pl-10 pr-4 font-body-sm text-sm text-white placeholder-[#464554] focus:outline-none focus:border-[#8083ff]/60 transition-colors"
           />
         </div>
 
-        <div className="flex items-center gap-md w-full md:w-auto">
-          <div className="relative">
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="appearance-none bg-surface-container-highest/20 text-on-surface font-label-sm text-label-sm rounded-lg py-3 pl-4 pr-10 outline-none border border-outline-variant/20 focus:border-secondary/50 focus:bg-surface-container-highest/40 transition-all cursor-pointer"
+        {/* Filter & Refresh */}
+        <div className="flex items-center gap-sm flex-wrap">
+          <div className="flex items-center bg-[#0c1426]/90 border border-white/10 rounded-xl p-1">
+            <button
+              onClick={() => setRoleFilter("all")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-colors cursor-pointer ${
+                roleFilter === "all"
+                  ? "bg-[#5659f4] text-white"
+                  : "text-[#908fa0] hover:text-white"
+              }`}
             >
-              <option
-                value="all"
-                className="bg-surface-container-high text-on-surface"
-              >
-                All Roles
-              </option>
-              <option
-                value="admin"
-                className="bg-surface-container-high text-on-surface"
-              >
-                Administrators
-              </option>
-              <option
-                value="user"
-                className="bg-surface-container-high text-on-surface"
-              >
-                Standard Users
-              </option>
-            </select>
-            <span className="material-symbols-outlined absolute right-md top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[20px]">
-              expand_more
-            </span>
+              All ({entities.length})
+            </button>
+            <button
+              onClick={() => setRoleFilter("admin")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-colors cursor-pointer ${
+                roleFilter === "admin"
+                  ? "bg-[#5659f4] text-white"
+                  : "text-[#908fa0] hover:text-white"
+              }`}
+            >
+              Admin ({entities.filter((e) => e.role === "admin").length})
+            </button>
+            <button
+              onClick={() => setRoleFilter("user")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-colors cursor-pointer ${
+                roleFilter === "user"
+                  ? "bg-[#5659f4] text-white"
+                  : "text-[#908fa0] hover:text-white"
+              }`}
+            >
+              User ({entities.filter((e) => e.role !== "admin").length})
+            </button>
           </div>
 
-          <button className="bg-primary text-on-primary font-label-sm text-label-sm px-6 py-3 rounded-lg hover:bg-primary-fixed hover:shadow-[0_0_20px_rgba(192,193,255,0.3)] transition-all duration-300 flex items-center gap-sm uppercase tracking-wider font-semibold">
-            <span className="material-symbols-outlined text-[18px]">add</span>{" "}
-            Provision
+          <button
+            onClick={fetchUsers}
+            disabled={loading}
+            title="Tải lại danh sách"
+            className="flex items-center gap-1.5 px-3 py-2 bg-[#0c1426]/90 hover:bg-[#1f2a47] border border-white/10 rounded-xl text-xs font-mono text-white transition-colors cursor-pointer disabled:opacity-50"
+          >
+            <span
+              className={`material-symbols-outlined text-[18px] ${
+                loading ? "animate-spin" : ""
+              }`}
+            >
+              refresh
+            </span>
+            <span>Refresh</span>
           </button>
         </div>
       </div>
 
-      {/* Table Data */}
+      {/* Table Container */}
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr class="bg-surface-container-high/20">
-              <th className="py-md px-lg font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest whitespace-nowrap">
-                Entity
+            <tr className="border-b border-white/5 bg-[#0e1628]/60">
+              <th className="py-3 px-4 font-mono text-[11px] text-[#908fa0] uppercase tracking-wider font-semibold">
+                User / Account
               </th>
-              <th className="py-md px-lg font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest whitespace-nowrap">
-                Contact Matrix
+              <th className="py-3 px-4 font-mono text-[11px] text-[#908fa0] uppercase tracking-wider font-semibold">
+                Vai trò (Role)
               </th>
-              <th className="py-md px-lg font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest whitespace-nowrap">
-                Clearance Level
+              <th className="py-3 px-4 font-mono text-[11px] text-[#908fa0] uppercase tracking-wider font-semibold">
+                Auth Type
               </th>
-              <th className="py-md px-lg font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest whitespace-nowrap">
-                System State
+              <th className="py-3 px-4 font-mono text-[11px] text-[#908fa0] uppercase tracking-wider font-semibold">
+                Created At
               </th>
-              <th className="py-md px-lg font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest whitespace-nowrap">
-                Lifecycle Start
-              </th>
-              <th className="py-md px-lg font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest whitespace-nowrap text-right">
-                Directives
+              <th className="py-3 px-4 font-mono text-[11px] text-[#908fa0] uppercase tracking-wider font-semibold text-right">
+                Actions
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-outline-variant/10">
-            {filteredEntities.map((entity) => (
-              <tr
-                key={entity.id}
-                className="group hover:bg-surface-container-high/30 transition-colors"
-              >
-                <td className="py-md px-lg">
-                  <div className="flex items-center gap-md">
-                    <div className="relative">
-                      {entity.avatar ? (
-                        <img
-                          src={entity.avatar}
-                          alt={entity.name}
-                          className="w-10 h-10 rounded-full object-cover border border-outline-variant/30"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center border border-outline-variant/30 text-on-surface font-label-sm font-semibold">
-                          {entity.initials}
-                        </div>
-                      )}
-                      <div
-                        className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-surface ${
-                          entity.status === "Active"
-                            ? "bg-green-500"
-                            : "bg-outline"
-                        }`}
-                      ></div>
-                    </div>
-                    <div>
-                      <p className="font-body-md text-body-md text-on-surface font-medium group-hover:text-primary transition-colors">
-                        {entity.name}
-                      </p>
-                      <p className="font-label-sm text-label-sm text-on-surface-variant/60">
-                        ID: {entity.id}
-                      </p>
-                    </div>
-                  </div>
-                </td>
-                <td className="py-md px-lg">
-                  <p className="font-body-sm text-body-sm text-on-surface-variant">
-                    {entity.email}
-                  </p>
-                </td>
-                <td className="py-md px-lg">
-                  <div
-                    className={`inline-flex items-center gap-xs px-3 py-1 rounded-md font-label-sm text-label-sm uppercase tracking-wide cursor-pointer transition-colors ${
-                      entity.role.includes("Admin")
-                        ? "bg-secondary/10 border border-secondary/20 text-secondary hover:bg-secondary/20"
-                        : "bg-surface-variant/50 border border-outline-variant/30 text-on-surface-variant hover:bg-surface-variant"
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-[14px]">
-                      {entity.role.includes("Admin") ? "shield" : "person"}
-                    </span>
-                    <span>{entity.role}</span>
-                    <span className="material-symbols-outlined text-[14px] ml-1">
-                      arrow_drop_down
-                    </span>
-                  </div>
-                </td>
-                <td className="py-md px-lg">
-                  <span className="inline-flex items-center gap-sm">
-                    <span
-                      className={`w-2 h-2 rounded-full ${
-                        entity.status === "Active"
-                          ? "bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]"
-                          : "bg-outline shadow-[0_0_8px_rgba(144,143,160,0.6)]"
-                      }`}
-                    ></span>
-                    <span className="font-body-sm text-body-sm text-on-surface-variant">
-                      {entity.status}
-                    </span>
-                  </span>
-                </td>
-                <td className="py-md px-lg">
-                  <p className="font-body-sm text-body-sm text-on-surface-variant font-mono">
-                    {entity.joinedDate}
-                  </p>
-                </td>
-                <td className="py-md px-lg text-right">
-                  <div className="flex items-center justify-end gap-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      title="Modify Configuration"
-                      aria-label="Modify Configuration"
-                      className="w-8 h-8 rounded-full bg-surface-container-highest hover:bg-primary/20 hover:text-primary text-on-surface-variant flex items-center justify-center transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">
-                        edit
-                      </span>
-                    </button>
-                    <button
-                      title="Suspend Access"
-                      aria-label="Suspend Access"
-                      className="w-8 h-8 rounded-full bg-surface-container-highest hover:bg-tertiary/20 hover:text-tertiary text-on-surface-variant flex items-center justify-center transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">
-                        lock
-                      </span>
-                    </button>
-                    <button
-                      title="Terminate Entity"
-                      aria-label="Terminate Entity"
-                      className="w-8 h-8 rounded-full bg-surface-container-highest hover:bg-error/20 hover:text-error text-on-surface-variant flex items-center justify-center transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">
-                        delete
-                      </span>
-                    </button>
+          <tbody className="divide-y divide-white/5">
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="py-12 text-center text-[#908fa0]">
+                  <div className="flex flex-col items-center justify-center gap-3">
+                    <div className="w-8 h-8 border-3 border-[#5659f4] border-t-transparent rounded-full animate-spin"></div>
+                    <span className="font-mono text-xs">Đang tải dữ liệu từ MongoDB...</span>
                   </div>
                 </td>
               </tr>
-            ))}
+            ) : filteredEntities.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="py-12 text-center text-[#908fa0] font-mono text-xs">
+                  Không tìm thấy tài khoản nào phù hợp.
+                </td>
+              </tr>
+            ) : (
+              filteredEntities.map((entity) => {
+                const isCurrent = entity._id === currentUser?._id;
+                const isAdmin = entity.role === "admin";
+                const isUpdatingThis = updatingRoleId === entity._id;
+
+                return (
+                  <tr
+                    key={entity._id}
+                    className="hover:bg-white/[0.02] transition-colors group"
+                  >
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-[#1b253f] border border-white/10 flex items-center justify-center font-bold text-xs text-[#c0c1ff] overflow-hidden flex-shrink-0">
+                          {entity.avatar && entity.avatar !== "default.jpg" ? (
+                            <img
+                              src={entity.avatar}
+                              alt={entity.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            (entity.name || entity.email || "U")
+                              .slice(0, 2)
+                              .toUpperCase()
+                          )}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-sans text-sm font-semibold text-white truncate max-w-[200px]">
+                              {entity.name || "Unnamed User"}
+                            </span>
+                            {isCurrent && (
+                              <span className="text-[9px] font-mono font-bold bg-[#5659f4]/30 text-[#a5a7ff] px-1.5 py-0.5 rounded border border-[#5659f4]/40">
+                                YOU
+                              </span>
+                            )}
+                          </div>
+                          <span className="font-mono text-xs text-[#908fa0] truncate max-w-[250px]">
+                            {entity.email}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="py-3.5 px-4">
+                      <div className="inline-flex items-center gap-2">
+                        <select
+                          value={entity.role || "user"}
+                          disabled={isUpdatingThis || isCurrent}
+                          onChange={(e) => handleRoleChange(entity, e.target.value)}
+                          className={`font-mono text-xs font-bold px-2.5 py-1 rounded-lg border appearance-none cursor-pointer focus:outline-none transition-all ${
+                            isAdmin
+                              ? "bg-[#6f00be]/30 text-[#ddb7ff] border-[#6f00be]/50 hover:bg-[#6f00be]/40"
+                              : "bg-[#1e2942] text-[#60a5fa] border-[#3b82f6]/30 hover:bg-[#253352]"
+                          } ${isUpdatingThis ? "opacity-50 cursor-wait" : ""}`}
+                        >
+                          <option value="user" className="bg-[#0c1426] text-[#60a5fa]">USER</option>
+                          <option value="admin" className="bg-[#0c1426] text-[#ddb7ff]">ADMIN</option>
+                        </select>
+                        {isUpdatingThis && (
+                          <div className="w-3.5 h-3.5 border-2 border-[#5659f4] border-t-transparent rounded-full animate-spin"></div>
+                        )}
+                      </div>
+                    </td>
+
+                    <td className="py-3.5 px-4">
+                      <span className="text-xs font-mono text-[#c7c4d7] bg-[#0c1426] px-2 py-1 rounded border border-white/5">
+                        {entity.authType || (entity.googleId ? "google" : "local")}
+                      </span>
+                    </td>
+
+                    <td className="py-3.5 px-4 font-mono text-xs text-[#908fa0]">
+                      {formatDate(entity.createdAt)}
+                    </td>
+
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        {/* Quick Role Toggle */}
+                        {!isCurrent && (
+                          <button
+                            onClick={() =>
+                              handleRoleChange(
+                                entity,
+                                isAdmin ? "user" : "admin"
+                              )
+                            }
+                            disabled={isUpdatingThis}
+                            title={
+                              isAdmin
+                                ? "Hạ quyền xuống User"
+                                : "Nâng quyền lên Admin"
+                            }
+                            className={`p-1.5 rounded-lg border text-xs font-mono transition-colors cursor-pointer flex items-center gap-1 ${
+                              isAdmin
+                                ? "text-[#ddb7ff] bg-[#6f00be]/20 border-[#6f00be]/30 hover:bg-[#6f00be]/30"
+                                : "text-[#60a5fa] bg-[#1e2942] border-[#3b82f6]/20 hover:bg-[#253352]"
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-[16px]">
+                              {isAdmin ? "shield_person" : "verified_user"}
+                            </span>
+                            <span>{isAdmin ? "Set User" : "Set Admin"}</span>
+                          </button>
+                        )}
+
+                        {!isCurrent && (
+                          <button
+                            onClick={() => handleDeleteUser(entity._id, entity.email)}
+                            disabled={deletingId === entity._id}
+                            title="Xóa tài khoản"
+                            className="p-1.5 rounded-lg text-[#908fa0] hover:text-[#ff6b6b] hover:bg-[#ff6b6b]/10 transition-colors cursor-pointer disabled:opacity-50"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">
+                              delete
+                            </span>
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* Pagination Footer */}
-      <div className="p-lg bg-surface-container/30 border-t border-outline-variant/10 flex flex-col sm:flex-row justify-between items-center gap-md">
-        <p className="font-label-sm text-label-sm text-on-surface-variant">
-          Showing 1 to {filteredEntities.length} of 14,289 entries
+      {/* Footer Info */}
+      <div className="p-4 bg-[#0e1628]/40 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-2">
+        <p className="font-mono text-xs text-[#908fa0]">
+          Tổng cộng: <strong className="text-white">{filteredEntities.length}</strong> / {entities.length} tài khoản trong Database
         </p>
-        <div className="flex items-center gap-xs">
-          <button
-            className="w-8 h-8 flex items-center justify-center rounded bg-surface-container-highest text-on-surface-variant hover:bg-surface-variant transition-colors disabled:opacity-50"
-            disabled
-          >
-            <span className="material-symbols-outlined text-[18px]">
-              chevron_left
-            </span>
-          </button>
-          <button className="w-8 h-8 flex items-center justify-center rounded bg-primary/20 text-primary font-label-sm text-label-sm font-semibold">
-            1
-          </button>
-          <button className="w-8 h-8 flex items-center justify-center rounded bg-surface-container-highest text-on-surface-variant hover:bg-surface-variant transition-colors font-label-sm text-label-sm">
-            2
-          </button>
-          <button className="w-8 h-8 flex items-center justify-center rounded bg-surface-container-highest text-on-surface-variant hover:bg-surface-variant transition-colors font-label-sm text-label-sm">
-            3
-          </button>
-          <span className="text-on-surface-variant font-label-sm px-2">
-            ...
-          </span>
-          <button className="w-8 h-8 flex items-center justify-center rounded bg-surface-container-highest text-on-surface-variant hover:bg-surface-variant transition-colors">
-            <span className="material-symbols-outlined text-[18px]">
-              chevron_right
-            </span>
-          </button>
-        </div>
       </div>
     </div>
   );

@@ -18,6 +18,12 @@ export const SignUpForm = ({ onSubmitSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email.trim())) {
+      toast.error("Vui lòng nhập địa chỉ email hợp lệ (ví dụ: name@gmail.com).");
+      return;
+    }
+
     if (!isPasswordValid) {
       toast.error("Mật khẩu phải có từ 6 ký tự trở lên.");
       return;

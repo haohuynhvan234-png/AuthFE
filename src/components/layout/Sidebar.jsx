@@ -8,12 +8,14 @@ export const Sidebar = () => {
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  const navItems = [
+  const allNavItems = [
     { id: "dashboard", path: "/dashboard", label: "Dashboard", icon: "dashboard" },
-    { id: "user-management", path: "/user-management", label: "User Management", icon: "group" },
-    { id: "system-logs", path: "/system-logs", label: "System Logs", icon: "terminal" },
+    { id: "user-management", path: "/user-management", label: "User Management", icon: "group", adminOnly: true },
+    { id: "system-logs", path: "/system-logs", label: "System Logs", icon: "terminal", adminOnly: true },
     { id: "security", path: "/security", label: "Security & Profile", icon: "security" },
   ];
+
+  const navItems = allNavItems.filter((item) => !item.adminOnly || user?.role === "admin");
 
   const handleLogout = async () => {
     await logout();
@@ -49,7 +51,7 @@ export const Sidebar = () => {
             <button
               key={item.id}
               onClick={() => navigate(item.path)}
-              className={`w-full flex items-center px-md py-sm rounded-lg transition-all text-left font-medium text-sm ${
+              className={`w-full flex items-center px-md py-sm rounded-lg transition-all text-left font-medium text-sm cursor-pointer ${
                 isActive
                   ? "bg-[#283252] text-[#c0c1ff] font-semibold shadow-sm"
                   : "text-[#c7c4d7] hover:bg-[#1b243d] hover:text-white"
@@ -57,6 +59,11 @@ export const Sidebar = () => {
             >
               <span className="material-symbols-outlined mr-md text-[20px]">{item.icon}</span>
               <span className="font-body-md text-body-md">{item.label}</span>
+              {item.adminOnly && (
+                <span className="ml-auto text-[9px] font-mono font-bold bg-[#6f00be]/40 text-[#ddb7ff] px-1.5 py-0.5 rounded border border-[#6f00be]/50 uppercase">
+                  Admin
+                </span>
+              )}
             </button>
           );
         })}
@@ -66,13 +73,20 @@ export const Sidebar = () => {
       {user && (
         <div className="p-md mx-md mb-xs rounded-xl bg-[#141d33] border border-white/5 flex items-center justify-between">
           <div className="flex flex-col truncate">
-            <span className="text-xs font-semibold text-white truncate">{user.name}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-white truncate">{user.name}</span>
+              {user.role === "admin" && (
+                <span className="text-[9px] font-mono font-bold bg-[#6f00be]/50 text-[#ddb7ff] px-1.5 py-0.2 rounded">
+                  ADMIN
+                </span>
+              )}
+            </div>
             <span className="text-[11px] font-mono text-[#908fa0] truncate">{user.email}</span>
           </div>
           <button
             onClick={handleLogout}
             title="Đăng xuất"
-            className="text-[#908fa0] hover:text-[#ff6b6b] transition-colors p-1.5 rounded-lg hover:bg-white/5 ml-2"
+            className="text-[#908fa0] hover:text-[#ff6b6b] transition-colors p-1.5 rounded-lg hover:bg-white/5 ml-2 cursor-pointer"
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>
           </button>

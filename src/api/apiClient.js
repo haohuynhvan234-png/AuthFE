@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
@@ -27,7 +27,12 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
+    const requestUrl = error.config?.url || "";
+    const isAuthAttempt =
+      requestUrl.includes("/login") || requestUrl.includes("/change-password");
+
+    // Chỉ xóa phiên đăng nhập khi token hết hạn/không hợp lệ ở các request nghiệp vụ
+    if (error.response && error.response.status === 401 && !isAuthAttempt) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
     }

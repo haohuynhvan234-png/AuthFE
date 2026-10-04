@@ -8,19 +8,15 @@ export const Header = () => {
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  const getBreadcrumbTitle = () => {
+  const getPageTitle = () => {
     switch (location.pathname) {
-      case "/user-management":
-        return "USER_MANAGEMENT";
-      case "/system-logs":
-        return "SYSTEM_AUDIT";
       case "/security":
-        return "USER_PROFILE";
+        return "User Profile & Security";
       case "/dashboard":
       case "/":
-        return "AUTH_PROD";
+        return "Dashboard";
       default:
-        return "AUTH_PROD";
+        return "Dashboard";
     }
   };
 
@@ -29,30 +25,20 @@ export const Header = () => {
     toast.success("Đã đăng xuất thành công.");
     navigate("/login");
   };
-  // tạo biến chứa user từ localStorage để hiển thị avatar, nếu không có thì dùng ảnh placeholder
+  
   const userLocalStorage = JSON.parse(localStorage.getItem("user")) || {};
-
   const avatarImg =
     userLocalStorage.avatar || "https://via.placeholder.com/150";
 
   return (
     <header className="fixed top-0 left-72 right-0 h-16 bg-[#0b1326]/90 backdrop-blur-xl border-b border-white/5 z-40 flex items-center justify-between px-lg">
-      <div className="flex items-center gap-sm text-xs font-mono text-[#908fa0]">
-        <span
-          onClick={() => navigate("/dashboard")}
-          className="hover:text-[#c0c1ff] cursor-pointer transition-colors"
-        >
-          PROJECTS
-        </span>
-        <span className="material-symbols-outlined text-[14px]">
-          chevron_right
-        </span>
-        <span className="text-white font-semibold uppercase tracking-wider">
-          {getBreadcrumbTitle()}
-        </span>
+      <div className="flex items-center gap-sm">
+        <h2 className="text-white font-semibold text-sm tracking-wide">
+          {getPageTitle()}
+        </h2>
       </div>
 
-      <div className="flex items-center gap-lg">
+      <div className="flex items-center gap-md">
         <span
           className={`px-3 py-1 rounded-full text-xs font-mono border uppercase tracking-wider font-semibold ${
             user?.role === "admin"
@@ -62,16 +48,6 @@ export const Header = () => {
         >
           {user?.role ? user.role.toUpperCase() : "USER"}
         </span>
-
-        <button
-          aria-label="Notifications"
-          className="relative text-[#c7c4d7] hover:text-[#c0c1ff] transition-colors flex items-center p-1"
-        >
-          <span className="material-symbols-outlined text-[22px]">
-            notifications
-          </span>
-          <span className="absolute top-1 right-1 w-2 h-2 bg-[#ffb4ab] rounded-full ring-2 ring-[#0b1326]"></span>
-        </button>
 
         <div className="flex items-center gap-md pl-md border-l border-white/10">
           <div
@@ -92,7 +68,7 @@ export const Header = () => {
           <button
             onClick={handleLogout}
             title="Đăng xuất"
-            className="text-[#908fa0] hover:text-[#ff6b6b] transition-colors p-1 flex items-center"
+            className="text-[#908fa0] hover:text-[#ff6b6b] transition-colors p-1 flex items-center cursor-pointer"
           >
             <span className="material-symbols-outlined text-[20px]">
               logout

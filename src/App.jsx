@@ -6,8 +6,6 @@ import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { PublicOnlyRoute } from "./components/auth/PublicOnlyRoute";
 import { MainLayout } from "./components/layout/MainLayout";
 import { DashboardPage } from "./pages/Dashboard";
-import { UserManagementPage } from "./pages/UserManagement";
-import { SystemLogsPage } from "./pages/SystemLogs";
 import { UserProfilePage } from "./pages/UserProfile";
 import { AuthPage } from "./pages/Auth";
 
@@ -121,26 +119,6 @@ function App() {
             <ProtectedRoute>
               <MainLayout>
                 <UserProfilePage />
-              </MainLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/user-management"
-          element={
-            <ProtectedRoute adminOnly={true}>
-              <MainLayout>
-                <UserManagementPage />
-              </MainLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/system-logs"
-          element={
-            <ProtectedRoute adminOnly={true}>
-              <MainLayout>
-                <SystemLogsPage />
               </MainLayout>
             </ProtectedRoute>
           }

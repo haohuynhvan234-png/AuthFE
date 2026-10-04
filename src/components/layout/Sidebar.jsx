@@ -8,14 +8,20 @@ export const Sidebar = () => {
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  const allNavItems = [
-    { id: "dashboard", path: "/dashboard", label: "Dashboard", icon: "dashboard" },
-    { id: "user-management", path: "/user-management", label: "User Management", icon: "group", adminOnly: true },
-    { id: "system-logs", path: "/system-logs", label: "System Logs", icon: "terminal", adminOnly: true },
-    { id: "security", path: "/security", label: "Security & Profile", icon: "security" },
+  const navItems = [
+    {
+      id: "dashboard",
+      path: "/dashboard",
+      label: "Dashboard",
+      icon: "dashboard",
+    },
+    {
+      id: "security",
+      path: "/security",
+      label: "Security & Profile",
+      icon: "security",
+    },
   ];
-
-  const navItems = allNavItems.filter((item) => !item.adminOnly || user?.role === "admin");
 
   const handleLogout = async () => {
     await logout();
@@ -26,12 +32,15 @@ export const Sidebar = () => {
   return (
     <aside className="fixed left-0 top-0 h-full w-72 bg-[#0c1427] z-50 border-r border-white/5 flex flex-col pt-md">
       {/* Brand Logo */}
-      <div 
-        className="px-lg mb-xl flex items-center gap-sm cursor-pointer select-none" 
+      <div
+        className="px-lg mb-xl flex items-center gap-sm cursor-pointer select-none"
         onClick={() => navigate("/dashboard")}
       >
         <div className="w-8 h-8 rounded-lg bg-primary-container/20 border border-primary/30 flex items-center justify-center text-primary shadow-[0_0_12px_rgba(99,102,241,0.3)]">
-          <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+          <span
+            className="material-symbols-outlined text-[20px]"
+            style={{ fontVariationSettings: "'FILL' 1" }}
+          >
             security
           </span>
         </div>
@@ -57,13 +66,10 @@ export const Sidebar = () => {
                   : "text-[#c7c4d7] hover:bg-[#1b243d] hover:text-white"
               }`}
             >
-              <span className="material-symbols-outlined mr-md text-[20px]">{item.icon}</span>
+              <span className="material-symbols-outlined mr-md text-[20px]">
+                {item.icon}
+              </span>
               <span className="font-body-md text-body-md">{item.label}</span>
-              {item.adminOnly && (
-                <span className="ml-auto text-[9px] font-mono font-bold bg-[#6f00be]/40 text-[#ddb7ff] px-1.5 py-0.5 rounded border border-[#6f00be]/50 uppercase">
-                  Admin
-                </span>
-              )}
             </button>
           );
         })}
@@ -74,22 +80,19 @@ export const Sidebar = () => {
         <div className="p-md mx-md mb-xs rounded-xl bg-[#141d33] border border-white/5 flex items-center justify-between">
           <div className="flex flex-col truncate">
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-semibold text-white truncate">{user.name}</span>
+              <span className="text-xs font-semibold text-white truncate">
+                {user.name}
+              </span>
               {user.role === "admin" && (
                 <span className="text-[9px] font-mono font-bold bg-[#6f00be]/50 text-[#ddb7ff] px-1.5 py-0.2 rounded">
-                  ADMIN
+                  Admin
                 </span>
               )}
             </div>
-            <span className="text-[11px] font-mono text-[#908fa0] truncate">{user.email}</span>
+            <span className="text-[11px] font-mono text-[#908fa0] truncate">
+              {user.email}
+            </span>
           </div>
-          <button
-            onClick={handleLogout}
-            title="Đăng xuất"
-            className="text-[#908fa0] hover:text-[#ff6b6b] transition-colors p-1.5 rounded-lg hover:bg-white/5 ml-2 cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-[18px]">logout</span>
-          </button>
         </div>
       )}
 

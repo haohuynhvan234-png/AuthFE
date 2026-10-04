@@ -86,24 +86,9 @@ export const SignInForm = () => {
         </div>
       </div>
 
-      {/* Remember me Checkbox */}
-      <div className="flex items-center gap-2 mt-1">
-        <label className="relative flex items-center cursor-pointer">
-          <input className="sr-only peer" type="checkbox" />
-          <div className="w-4 h-4 rounded border border-white/20 bg-[#0c1426] peer-checked:bg-[#5659f4] peer-checked:border-[#5659f4] transition-all flex items-center justify-center">
-            <span className="material-symbols-outlined text-[12px] text-white opacity-0 peer-checked:opacity-100 transition-opacity font-bold">
-              check
-            </span>
-          </div>
-          <span className="ml-2 font-sans text-xs text-[#908fa0] select-none">
-            Remember me
-          </span>
-        </label>
-      </div>
-
       {/* Submit Button */}
       <button
-        className="relative w-full py-2.5 mt-1 bg-[#5659f4] hover:bg-[#4548e2] text-white font-mono text-sm font-semibold rounded-xl overflow-hidden group transition-all duration-300 shadow-lg shadow-[#5659f4]/25 flex items-center justify-center active:scale-98 cursor-pointer"
+        className="relative w-full py-2.5 mt-2 bg-[#5659f4] hover:bg-[#4548e2] text-white font-mono text-sm font-semibold rounded-xl overflow-hidden group transition-all duration-300 shadow-lg shadow-[#5659f4]/25 flex items-center justify-center active:scale-98 cursor-pointer"
         type="submit"
         disabled={loading}
       >
